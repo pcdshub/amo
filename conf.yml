@@ -1,0 +1,7 @@
+hutch: amo
+
+# Locate happi database
+db: /reg/g/pcds/pyps/apps/hutch-python/device_config/db.json
+
+# Hutch-specific imports
+load: amo.beamline
