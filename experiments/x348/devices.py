@@ -23,7 +23,7 @@ from .utils import calibrated
 logger = logging.getLogger(__name__)
 
 
-class McgranePalette(Device, FltMvInterface):
+class McgranePalette( FltMvInterface, Device):
     x_motor = Cpt(ErrorIMS, "SXR:EXP:MMS:08", name='LJE Sample X')
     y_motor = Cpt(IMS, "SXR:EXP:MMS:10", name='LJE Sample Y')
     z_motor = Cpt(IMS, "SXR:EXP:MMS:11", name='LJE Sample Z')
