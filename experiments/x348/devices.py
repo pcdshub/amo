@@ -6,6 +6,7 @@ from pathlib import Path
 from functools import reduce
 from glob import glob
 from inspect import getdoc, getframeinfo, currentframe
+import pdb
 
 import json
 import numpy as np
@@ -30,8 +31,8 @@ class McgranePalette( FltMvInterface, Device):
     rot_motor = Cpt(IMS, "SXR:EXP:MMS:12", name='LJE Sample Rotation')
 
     def __init__(self, N=(24*3 + 8), M=23, chip_spacing=2.4, sample_spacing=1.0,
-                 timeout=1, chip_dims=[8,24,24,24], dir_calib=None, *args, 
-                 **kwargs):
+                 timeout=1, chip_dims=[8,24,24,24], dir_calib=None,
+                 enable_chips = False,  *args, **kwargs):
         """Base device for the mcgrane paddle.
 
         The Mcgrane palette is a virtual motor consisting of three motors moving
@@ -67,6 +68,8 @@ class McgranePalette( FltMvInterface, Device):
         self.timeout = timeout
         self.N = N
         self.M = M
+        
+        self.enable_chips = enable_chips
 
         self.chip_dims = chip_dims
         # Make sure the dimensions passed match N
@@ -144,7 +147,7 @@ class McgranePalette( FltMvInterface, Device):
         
         # Write the calibration coordinates
         with open(str(calib_path), 'w') as calib:
-            json.dump([list(pt) for pt in self.calibration_coordinates], calib)
+            json.dump([pt.tolist() for pt in self.calibration_coordinates], calib)
         logger.info('Saved calibration as "{0}"'.format(name))
 
     def load_calibration(self, name=None, confirm_overwrite=True):
@@ -206,6 +209,7 @@ class McgranePalette( FltMvInterface, Device):
             3-length iterable (x,y,z) specifying spatial coordinate if the [0,M]
             sample
         """
+        #pdb.set_trace()
         if self.calibrated and confirm_overwrite:
             # Get input from the user if they really want to calibrate
             prompt_str = 'Are you sure you want to overwrite the current ' \
@@ -243,7 +247,10 @@ class McgranePalette( FltMvInterface, Device):
         self.NM_hat = np.concatenate((self.N_hat.reshape(len(self.motors), 1), 
                                       self.M_hat.reshape(len(self.motors), 1)), 
                                      axis=1)
-
+        
+        #print("HATS")
+        #print(self.N_hat, self.M_hat, self.NM_hat, sep="\n")
+        #pdb.set_trace()
         # The actual measured distance between the [0,0] and [N,0] samples
         self.length_calibrated = np.sqrt(np.sum((self.n_pt - self.start_pt)**2))
         logger.info('Successfully calibrated "{0}"'.format(self.name))
@@ -261,10 +268,14 @@ class McgranePalette( FltMvInterface, Device):
         j : int
             The j coordinate to move to on the palette
         """
-        return (self.start_pt + i*self.N_hat + j*self.M_hat 
-                + self._chip_from_i(i)*self.chip_factor
-                * (self.n_pt - self.start_pt))
-
+        
+        if self.enable_chips:
+            return (self.start_pt + i*self.N_hat + j*self.M_hat 
+                    + self._chip_from_i(i)*self.chip_factor
+                    * (self.n_pt - self.start_pt))
+        
+        return (self.start_pt + i*self.N_hat + j*self.M_hat) 
+    
     @calibrated
     def locate_1d(self, k):
         """Return (i,j) coordinates of sample k.
