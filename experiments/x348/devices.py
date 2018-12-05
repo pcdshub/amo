@@ -11,9 +11,10 @@ import pdb
 import json
 import numpy as np
 from ophyd.device import Device, Component as Cpt
-from ophyd.status import Status, wait as status_wait
+from ophyd.status import Status, wait as status_wait, SubscriptionStatus
 from pcdsdevices.mv_interface import FltMvInterface
 from pcdsdevices.epics_motor import IMS
+from pcdsdevices.sequencer import EventSequencer, EventSequence
 
 from sxr.devices import ErrorIMS
 from sxr.exceptions import InputError
@@ -23,6 +24,15 @@ from .utils import calibrated
 
 logger = logging.getLogger(__name__)
 
+
+class SetSequencer(EventSequencer):
+    def set(self, value, *args, **kwargs):
+        """Set the sequencer start PV to the inputted value."""
+        def cb(*args, **kwargs):
+            time.sleep(self._cb_sleep)
+            return self.play_status.get() == 0
+        self.play_control.put(value)
+        return SubscriptionStatus(self.play_status, cb)
 
 class McgranePalette( FltMvInterface, Device):
     x_motor = Cpt(ErrorIMS, "SXR:EXP:MMS:08", name='LJE Sample X')

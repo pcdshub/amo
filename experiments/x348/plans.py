@@ -70,11 +70,14 @@ def mcgrane_scan(outer_motor, inner_motor, sequencer, outer_start,
             # Set a checkpoint in case the scan is interrupted
             yield from checkpoint()
 
+            """
             # Notify the user where we are trying to move to
             goal_sample = inner_motor.position + inner_step_size
             goal_index = inner_motor.locate_1d(goal_sample)
             logger.info('Inner Step: Moving {0} to {1} (sample {2})'.format(
                 inner_motor.name, goal_index, goal_sample))
+            """
+
             # Move the motor to the inputted step
             yield from rel_set(inner_motor, inner_step_size, wait=True)
 
@@ -91,10 +94,11 @@ def mcgrane_scan(outer_motor, inner_motor, sequencer, outer_start,
 
             # Fill the dataframe
             scan_positions.append((outer_motor.position, 
-                                   inner_motor.chip,
+                                   #inner_motor.chip,
                                    inner_motor.position,
-                                   *inner_motor.index,
-                                   *inner_motor.coordinates))
+                                   #*inner_motor.index,
+                                   #*inner_motor.coordinates
+                                   ))
  
         # Define the larger inner scan as a list_scan. We cannot use
         # rel_list_scan because it includes the reset_positions_decorator,
@@ -104,7 +108,7 @@ def mcgrane_scan(outer_motor, inner_motor, sequencer, outer_start,
 
     # # Set the sequencer to run once
     if use_sequencer:
-        yield from abs_set(sequencer.set_run_count_pattern, 0, wait=True)
+        yield from abs_set(sequencer.play_mode, 0, wait=True)
 
     try:
         # Perform the larger scan
@@ -117,8 +121,11 @@ def mcgrane_scan(outer_motor, inner_motor, sequencer, outer_start,
                                                  inner_motor.position))
 
     # Create the dataframe and return it
+    '''
     columns = ('mono', 'chip', 'sample', 'i', 'j', 'x', 'y', 'z')
     df = pd.DataFrame(scan_positions, columns=columns)
     df.index.name = 'Scan Step'
     return df
+    '''
+    return None
 
