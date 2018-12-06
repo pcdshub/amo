@@ -1,14 +1,84 @@
 import logging
 import time
 
+
 import pandas as pd
-from bluesky.plan_stubs import abs_set, rel_set, checkpoint
+from bluesky.plan_stubs import abs_set, rel_set, checkpoint, mv
 from bluesky.plans import scan, inner_product_scan, list_scan
 from bluesky.preprocessors import stub_wrapper
 
 from .exceptions import InvalidSampleError
 
 logger = logging.getLogger(__name__)
+
+
+def x348_scan(palette, sequencer, first_target, last_target=None,
+        sequencer_delay=None):
+    """
+    Parameters
+    ----------
+    palette : experiments.x348.devices.McgranePalette
+        Pallete object w/ motors and math modules. This is an ophyd object
+        representing the mobile target-holding device. This plan presumes that
+        the palette object has already been calibrated. externally
+
+    sequencer : 
+        Ophyd object for controlling LCLS sequencer. In burst mode this object
+        allows sequences of shots to be called on demand. 
+
+    first_target : int 
+        Index of the first target on the sample to be struck by the beam. This
+        is inclusive such that if this argument is 5, sample No. 5 will be the
+        first sample to recieve beam.
+
+    last_target : int or None.
+        Index of the last target on the sample to be struck. This is exclusive
+        such that if this argument is 5, sample No. 5 will NOT recive beam.
+        Presuming that the indexes are in posive order (first target <
+        last_target), No. 4 will be the last to recieve beam. In the event that
+        this is None, only the first_target will be scanned.
+
+    sequencer_delay : float
+        A delay time to wait after each sequencer run. This may be necessary if
+        the sequencer start command does not block until the sequence's
+        completion.
+    """
+
+    # Handle the default value for the sequencer delay
+    if sequencer_delay is None:
+        sequencer_delay = 0.0
+
+    # Set the sequencer's delay duration
+    sequencer._cb_sleep = sequencer_delay
+
+    # Create the ordered range of targets to be sampled
+    if last_target is not None:
+        index_sequence = range(first_target, last_target) 
+    else:
+        index_sequence = [first_target]
+
+    # Generate spatial coordinate list of all samples to test. 
+    xyz_sequence = []
+    for target_index in index_sequence:
+        xyz_sequence.append(
+            palette.locate_2d(*palette.locate_1d(target_index))) 
+
+    for index, coordinates in zip(index_sequence, xyz_sequence):
+        yield from mv(
+            palette.x_motor, coordinates[0],
+            palette.y_motor, coordinates[1],
+            palette.z_motor, coordinates[2],
+        )
+
+        yield from abs_set(sequencer, 1, wait=True)
+        
+        
+        #print("~~~~~~~~~~~~")
+        #print(index)
+        #print(palette.x_motor.position)
+        #print(palette.y_motor.position)
+        #print(palette.z_motor.position)
+
 
 def mcgrane_scan(outer_motor, inner_motor, sequencer, outer_start,
                  outer_stop, outer_steps, inner_steps, inner_step_size=1,

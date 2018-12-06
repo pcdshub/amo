@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import pytest
 from bluesky.preprocessors  import run_wrapper
 from ophyd.sim import SynAxis
@@ -7,15 +8,15 @@ from ophyd.sim import SynAxis
 from ophyd.sim import NullStatus, make_fake_device
 
 
-from ..devices import SetSequencer as EventSequencer
-from .conftest import SynSequencer
-from ..plans import mcgrane_scan
+from ..devices import McgranePalette, SetSequencer as EventSequencer
+from .conftest import SynSequencer, McgrainPalette
+from ..plans import mcgrane_scan, x348_scan
 
 logger = logging.getLogger(__name__)
 
 
 FakeSequencer = make_fake_device(EventSequencer)
-
+FakePalette = make_fake_device(McgranePalette)
 
 
 # Simulated Sequencer for use in scans
@@ -64,6 +65,35 @@ def test_mcgrane_scan(fresh_RE):
         yield from mcgrane_scan(m1, m2, seq, 0, 5, 6, 5)
         assert m1.position == 5.0
         assert m2.position == 30
+        assert seq.play_control.get() == 1
+
+    # Send all metadata/data captured to the BestEffortCallback.
+    fresh_RE(run_wrapper(test_plan()))
+
+def test_x348_scan(fresh_RE):
+    #m1 = SynAxis(name="m1")
+    #m2 = SynAxis(name="m2")
+    #seq = SynSequencer('', name='sequencer')
+    pal = McgrainPalette(
+        name = 'test_palette',
+        N = 10,
+        M = 5,
+        chip_spacing = 0,
+        chip_dims = [10])
+
+    pal._accept_calibration(
+        start_pt=np.array([0,0,0]), 
+        n_pt=np.array([pal.N-1,0,0]),
+        m_pt=np.array([0,pal.M-1,0]))
+
+
+    seq = SimSequencer('', name='sequencer')
+    
+    seq._cb_sleep = 0 
+    def test_plan():
+        yield from x348_scan(pal, seq, 0, 7)
+        assert pal.x_motor.position == 1.0
+        assert pal.y_motor.position == 3.0
         assert seq.play_control.get() == 1
 
     # Send all metadata/data captured to the BestEffortCallback.

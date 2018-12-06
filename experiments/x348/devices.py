@@ -123,8 +123,8 @@ class McgranePalette( FltMvInterface, Device):
         self.calibrated = False
 
         # Experiment paths
-        self.dir_sxropr = Path('/reg/neh/operator/sxropr')
-        self.dir_experiment = self.dir_sxropr / 'experiments/sxrlr5816'
+        self.dir_sxropr = Path('.')
+        self.dir_experiment = self.dir_sxropr / 'experiment_archives/x348'
         self.dir_calib = dir_calib or self.dir_experiment / 'calibrations'
 
     @calibrated
