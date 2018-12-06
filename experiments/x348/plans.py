@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 def x348_scan(palette, sequencer, first_target, last_target=None,
-        sequencer_delay=None):
+        sequencer_delay=None, use_sequencer=True):
     """
     Parameters
     ----------
     palette : experiments.x348.devices.McgranePalette
-        Pallete object w/ motors and math modules. This is an ophyd object
+        Pallette object w/ motors and math modules. This is an ophyd object
         representing the mobile target-holding device. This plan presumes that
-        the palette object has already been calibrated. externally
+        the palette object has already been calibrated externally.
 
     sequencer : 
         Ophyd object for controlling LCLS sequencer. In burst mode this object
@@ -29,19 +29,23 @@ def x348_scan(palette, sequencer, first_target, last_target=None,
     first_target : int 
         Index of the first target on the sample to be struck by the beam. This
         is inclusive such that if this argument is 5, sample No. 5 will be the
-        first sample to recieve beam.
+        first sample to receive beam.
 
     last_target : int or None.
         Index of the last target on the sample to be struck. This is exclusive
-        such that if this argument is 5, sample No. 5 will NOT recive beam.
-        Presuming that the indexes are in posive order (first target <
-        last_target), No. 4 will be the last to recieve beam. In the event that
-        this is None, only the first_target will be scanned.
+        such that if this argument is 5, sample No. 5 will NOT receive beam.
+        Presuming that the indexes are in positive order (first target <
+        last_target), No. 4 will be the last to receive beam. In the event that
+        this is None, only the first_target will be scanned. Defaults to None.
 
-    sequencer_delay : float
+    sequencer_delay : float or None
         A delay time to wait after each sequencer run. This may be necessary if
         the sequencer start command does not block until the sequence's
-        completion.
+        completion. Defaults to None
+
+    use_sequencer : bool
+        Set to False to disable the sequencer. Intended for debugging only
+        Defaults to True.
     """
 
     # Handle the default value for the sequencer delay
@@ -50,6 +54,10 @@ def x348_scan(palette, sequencer, first_target, last_target=None,
 
     # Set the sequencer's delay duration
     sequencer._cb_sleep = sequencer_delay
+
+    if use_sequencer:
+        yield from abs_set(sequencer.play_mode, 0, wait=True)
+
 
     # Create the ordered range of targets to be sampled
     if last_target is not None:
@@ -69,8 +77,8 @@ def x348_scan(palette, sequencer, first_target, last_target=None,
             palette.y_motor, coordinates[1],
             palette.z_motor, coordinates[2],
         )
-
-        yield from abs_set(sequencer, 1, wait=True)
+        if use_sequencer: 
+            yield from abs_set(sequencer, 1, wait=True)
         
         
         #print("~~~~~~~~~~~~")

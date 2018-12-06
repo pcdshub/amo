@@ -94,7 +94,7 @@ venv/
 ENV/
 
 # vi
-*.swp
+*.sw*
 
 # Spyder project settings
 .spyderproject

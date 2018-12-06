@@ -91,7 +91,7 @@ def test_x348_scan(fresh_RE):
     
     seq._cb_sleep = 0 
     def test_plan():
-        yield from x348_scan(pal, seq, 0, 7)
+        yield from x348_scan(pal, seq, 0, 7, .1)
         assert pal.x_motor.position == 1.0
         assert pal.y_motor.position == 3.0
         assert seq.play_control.get() == 1
