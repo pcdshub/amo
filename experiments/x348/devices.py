@@ -35,10 +35,10 @@ class SetSequencer(EventSequencer):
         return SubscriptionStatus(self.play_status, cb)
 
 class McgranePalette( FltMvInterface, Device):
-    x_motor = Cpt(ErrorIMS, "SXR:EXP:MMS:08", name='LJE Sample X')
-    y_motor = Cpt(IMS, "SXR:EXP:MMS:10", name='LJE Sample Y')
-    z_motor = Cpt(IMS, "SXR:EXP:MMS:11", name='LJE Sample Z')
-    rot_motor = Cpt(IMS, "SXR:EXP:MMS:12", name='LJE Sample Rotation')
+    x_motor = Cpt(ErrorIMS, "AMO:PPL:MMS:06", name='Sample Position X')
+    y_motor = Cpt(IMS, "AMO:PPL:MMS:05", name='Sample Position Y')
+    z_motor = Cpt(IMS, "AMO:PPL:MMS:07", name='Sample Position Z')
+    #rot_motor = Cpt(IMS, "SXR:EXP:MMS:12", name='Sample Rotation')
 
     def __init__(self, N=(24*3 + 8), M=23, chip_spacing=2.4, sample_spacing=1.0,
                  timeout=1, chip_dims=[8,24,24,24], dir_calib=None,

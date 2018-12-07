@@ -72,14 +72,27 @@ def x348_scan(palette, sequencer, first_target, last_target=None,
             palette.locate_2d(*palette.locate_1d(target_index))) 
 
     for index, coordinates in zip(index_sequence, xyz_sequence):
+        # Drive sample palette to next sample's location
+        logger.info("Move to index: {:>4}".format(index))
+        logger.info("Coordinates: {:>10,.4f} {:>10,.4f} {:>10,.4f}".format(
+            float(coordinates[0]),
+            float(coordinates[1]),
+            float(coordinates[2]),
+        ))
         yield from mv(
             palette.x_motor, coordinates[0],
             palette.y_motor, coordinates[1],
             palette.z_motor, coordinates[2],
         )
-        if use_sequencer: 
-            yield from abs_set(sequencer, 1, wait=True)
         
+        # Initiate Beam by setting the sequencer
+        # Note: this abs_set functionality is added by the class extension
+        # defined in the local devices file - this is not normally a supported
+        # operation
+        if use_sequencer: 
+            logger.info("Initiate sequence")
+            yield from abs_set(sequencer, 1, wait=True)
+            logger.info("Sequence complete")
         
         #print("~~~~~~~~~~~~")
         #print(index)
