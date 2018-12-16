@@ -93,9 +93,9 @@ def x348_scan_tool(N, M, start_pt, n_pt, m_pt, start=0, stop=None,
         m_pt = m_pt, 
     )
 
-    pal.x_motor.move(start_pt[0])
-    pal.y_motor.move(start_pt[1])
-    pal.z_motor.move(start_pt[2]) 
+    #pal.x_motor.move(start_pt[0])
+    #pal.y_motor.move(start_pt[1])
+    #pal.z_motor.move(start_pt[2]) 
    
 
     RE = RunEngine({})
