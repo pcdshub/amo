@@ -70,7 +70,9 @@ def x348_scan(palette, sequencer, first_target, last_target=None,
     for target_index in index_sequence:
         xyz_sequence.append(
             palette.locate_2d(*palette.locate_1d(target_index))) 
-
+    
+    #logger.info(str(index_sequence))
+    #logger.info(str(xyz_sequence))
     for index, coordinates in zip(index_sequence, xyz_sequence):
         # Drive sample palette to next sample's location
         logger.info("Move to index: {:>4}".format(index))
